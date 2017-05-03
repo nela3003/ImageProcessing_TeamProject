@@ -1,5 +1,5 @@
 # ImageProcessing_TeamProject
-Team Project to Signal and Image Processing, University of Bern
+Team project to lecture "Introduction to Signal and Image Processing" at University of Bern.
 
 ### Team members
 - Livio Baetscher
