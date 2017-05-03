@@ -5,3 +5,6 @@ Team project to lecture "Introduction to Signal and Image Processing" at Univers
 - Livio Baetscher
 - Manueal Haefliger
 - Marc-Antoine Jacques
+
+### Language
+- Python 3.6.1
