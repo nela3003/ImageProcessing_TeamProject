@@ -1,6 +1,3 @@
-# everyone keeps his/her own data files
-data/*
-
 # pycharm project
 .idea/
 
