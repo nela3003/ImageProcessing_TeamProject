@@ -17,6 +17,7 @@ import scipy.signal
 import time
 from skimage import filters
 
+
 def rgb2gray(rgb):
     """
     Convert an RGB image to grayscale according to https://en.wikipedia.org/wiki/Grayscale
