@@ -64,6 +64,28 @@ def StripeMotif(height, width, nber_stripe=4):
     return stripes
 
 
+def ExtractRed(image, threshold_blue = 100, threshold_green = 100, minimum_red = 150):
+    """
+    Isolate red color from an image
+    :param img: a 3D numpy array
+    :return: a 3D numpy array with red zones
+    """
+
+    # Suppress all parts where green and blue are too strong and red too low (remoive non-red)
+    img = np.copy(image)
+    img[np.where(img[..., 1] >= threshold_green)] = 0
+    img[np.where(img[..., 2] >= threshold_blue)] = 0
+    img[np.where(img[..., 0] <= minimum_red)] = 0
+
+    # Set all red pixels to 255
+    img[np.where(img[..., 0] > 0)] = 255
+    return img
+
+
+temp = ExtractRed(i, 100, 100, 150); plt.imshow(temp); plt.colorbar()
+
+
+
 i = plt.imread('./data/images/27.jpg')
 t = plt.imread('./template/stripes2.jpg')
 pi = tuple(skimage.transform.pyramid_gaussian(i, downscale=2))
