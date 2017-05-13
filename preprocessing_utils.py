@@ -99,7 +99,7 @@ reds_grayscale = rgb2gray(reds)
 stripe_template = StripeMotif(width=12, height=16, nber_stripe=4)
 
 t1 = time.time()
-score = scipy.signal.correlate2d(reds_grayscale, stripe_template)
+score = scipy.signal.correlate2d(reds_grayscale, stripe_template, mode='same')
 t2 = time.time()
 print('Elapsed time: {:03f}'.format(t2-t1))
 PlotHeatmap(image, score)
