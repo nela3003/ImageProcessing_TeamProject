@@ -8,10 +8,7 @@ Team Project
 - Marc-Antoine Jacques
 
 Python Version: 3.6.1
-
-Isolate red channel and remove as much background as possible, make the shirt stripes motif as clean as possible
 """
-
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,9 +17,17 @@ import scipy.signal
 import time
 from skimage import filters
 
-
 def rgb2gray(rgb):
     return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
+
+
+def PlotHeatmap(image, score_image, alpha = 0.7):
+    plt.figure()
+    plt.imshow(image)
+    plt.imshow(score_image, alpha=alpha)
+    plt.colorbar()
+    plt.show()
+
 
 def RemoveBackground(img, method, window_size = 25, k = 0.8):
     """
@@ -40,7 +45,7 @@ def RemoveBackground(img, method, window_size = 25, k = 0.8):
         threshold = filters.threshold_niblack(img, window_size, k)
     elif method == 'sauvola':
         threshold = filters.threshold_sauvola(img)
-    #image[image <= threshold] = 255
+    image[image <= threshold] = 255
     image[image >= threshold] = 0
     return image
 
@@ -58,7 +63,6 @@ def StripeMotif(height, width, nber_stripe=4):
     stripes = np.zeros((height, width))
     stripe_height = int(height/nber_stripe)
     breakpoints = [(i, i+stripe_height) for i in range(0, height - stripe_height + 1, stripe_height*2)]
-    print(breakpoints)
     for rows in breakpoints:
         stripes[rows[0]:rows[1], :] = 255
     return stripes
@@ -82,30 +86,20 @@ def ExtractRed(image, threshold_blue = 100, threshold_green = 100, minimum_red =
     return img
 
 
-temp = ExtractRed(i, 100, 100, 150); plt.imshow(temp); plt.colorbar()
 
+# ===============================================================
+# =                       One example                           =
+# ===============================================================
 
+image = plt.imread('./data/images/04.jpg')
+reds = ExtractRed(image, 100, 100, 150)
+PlotHeatmap(image, reds)
+reds_grayscale = rgb2gray(reds)
 
-i = plt.imread('./data/images/27.jpg')
-t = plt.imread('./template/stripes2.jpg')
-pi = tuple(skimage.transform.pyramid_gaussian(i, downscale=2))
-pt = tuple(skimage.transform.pyramid_gaussian(t, downscale=2))
+stripe_template = StripeMotif(width=12, height=16, nber_stripe=4)
 
-plt.imshow(i[...,0]); plt.colorbar()  # Red channel
-i2 = np.copy(i)
-i2[np.where(i2[..., 1] >= 100)] = 0
-i2[np.where(i2[..., 2] >= 100)] = 0
-
-
-
-i2 = rgb2gray(i2)
-plt.imshow(i2)
-
-temp = RemoveBackground(i2, 'sauvola', window_size=25, k=0.8)
-plt.figure()
-plt.subplot(121)
-plt.imshow(i2, cmap = 'gray')
-plt.subplot(122)
-plt.imshow(temp, cmap = 'gray')
-plt.show()
-del temp
+t1 = time.time()
+score = scipy.signal.correlate2d(reds_grayscale, stripe_template)
+t2 = time.time()
+print('Elapsed time: {:03f}'.format(t2-t1))
+PlotHeatmap(image, score)
