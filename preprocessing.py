@@ -45,22 +45,23 @@ def RemoveBackground(img, method, window_size = 25, k = 0.8):
     return image
 
 
-def StripeMotif(height, width=16*height/9,  nber_stripe):
+def StripeMotif(height, width, nber_stripe=4):
     """
-    # Create a grayscale stripes pattern, representing Waldo's shirt 
+    Create a grayscale stripes pattern, representing Waldo's shirt 
     :param width: width of the motif
     :param height: height of the motif
     :param nber_stripe: number of partitions
     :return: 2D numpy array, binarized with 0 and 255
     """
+    if height % nber_stripe != 0:
+        raise ValueError('height must be a multiple of nber_stripe')
     stripes = np.zeros((height, width))
-    stripe_height = height/nber_stripe
-    breakpoints = [(i, i+stripe_height) for i in range()]
-    stripes[0:10, :] = 255
-    stripes[20:30, :] = 255
-    stripes[40:50, :] = 255
-    stripes[60:70, :] = 255
-
+    stripe_height = int(height/nber_stripe)
+    breakpoints = [(i, i+stripe_height) for i in range(0, height - stripe_height + 1, stripe_height*2)]
+    print(breakpoints)
+    for rows in breakpoints:
+        stripes[rows[0]:rows[1], :] = 255
+    return stripes
 
 
 i = plt.imread('./data/images/27.jpg')
