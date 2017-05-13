@@ -18,10 +18,22 @@ import time
 from skimage import filters
 
 def rgb2gray(rgb):
+    """
+    Convert an RGB image to grayscale according to https://en.wikipedia.org/wiki/Grayscale
+    :param rgb: a 3D numpy array
+    :return: a 2D numpy array
+    """
     return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
 
 
 def PlotHeatmap(image, score_image, alpha = 0.7):
+    """
+    Overlay two images, score_image with alpha transparency
+    :param image: numpy array
+    :param score_image: numpy array  
+    :param alpha: transparency
+    :return: "Heatmap plot"
+    """
     plt.figure()
     plt.imshow(image)
     plt.imshow(score_image, alpha=alpha)
