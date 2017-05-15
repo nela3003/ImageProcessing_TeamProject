@@ -162,11 +162,11 @@ PlotHeatmap(image, peak_positions_img, title='Most probable positions of Waldo',
 
 
 # =================================
-# DAnker: warzone :/
+# Danger: warzone :/
 # ToDo: Set the template for the glasses (Yes we hope this will help).
 # Note: the preprocessing is no longer used.
 # Parameters
-image = './data/images/04.jpg'
+image = './data/images/04.jpg'  # ToDo: We also might use a picture from waldos face to get a glasses template.
 min_dist_peak, thresh_peak, max_nber_peak = 20, 0.2, 5
 size_box = 10
 
