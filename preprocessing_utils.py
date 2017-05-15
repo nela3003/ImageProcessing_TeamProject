@@ -116,7 +116,7 @@ def DrawRectangle(image, x, y, box_size):
 
 def find_waldo(img, template, min_red, max_green, max_blue, min_dist_peak, thresh_peak, max_nber_peak, size_box, plot=True):
     """
-    
+    Returns a list of possible positions of waldo in an image file. Search is done by convolution with a template.
     :param img: path to image file
     :param template: a numpy array
     :param min_red: numeric, minimum value in R channel to class a pixel as red
