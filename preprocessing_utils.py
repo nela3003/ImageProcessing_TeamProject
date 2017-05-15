@@ -114,8 +114,54 @@ def DrawRectangle(image, x, y, box_size):
     image[(x-box_size):(x+box_size), (y-box_size):(y+box_size)] = True
 
 
+def find_waldo(img, template, min_red, max_green, max_blue, min_dist_peak, thresh_peak, max_nber_peak, size_box, plot=True):
+    """
+    
+    :param img: path to image file
+    :param template: a numpy array
+    :param min_red: numeric, minimum value in R channel to class a pixel as red
+    :param max_green: numeric, maximum value in G channel to class a pixel as red
+    :param max_blue: numeric, maximum value in B channel to class a pixel as red
+    :param min_dist_peak: int, minimal distance between peaks of detection in pixel
+    :param thresh_peak: float, relative intensity of a peak compare to max intensity
+    :param max_nber_peak: int, max number of peaks
+    :param size_box: int, size of the box for plotting Waldo's position
+    :return: a 2D numpy array with Waldo's most probable positions
+    """
+    image = plt.imread(img)
+    # Isolate red pixels
+    reds = ExtractRed(image, min_red, max_green, max_blue)
+    reds_grayscale = rgb2gray(reds)
+    if plot:
+        PlotHeatmap(image, reds, title='Binarized Red Pixels map', bar=False)
+
+    # If use a non-symmetric template, flip it if for convolution (so that it does the same as correlation)
+    template = np.fliplr(template)
+    template = np.flipud(template)
+
+    t1 = time.time()
+    # Look for template, heatmap of template in different regions
+    score = scipy.signal.fftconvolve(reds_grayscale, template, mode='same')
+    # Isolate peaks
+    peak_positions = feature.corner_peaks(score, min_distance=min_dist_peak, indices=True, threshold_rel=thresh_peak,
+                                          num_peaks=max_nber_peak)
+    t2 = time.time()
+    print('Elapsed time: {:03f}'.format(t2 - t1))
+    if plot:
+        PlotHeatmap(image, score, title='Convolution score')
+
+    # Draw a rectangle at the position of the peaks -> this is slow and redundant, could be improved
+    if plot:
+        peak_positions_img = feature.corner_peaks(score, min_distance=min_dist_peak, indices=False,
+                                              threshold_rel=thresh_peak, num_peaks=max_nber_peak)
+        for pos in peak_positions:
+            DrawRectangle(peak_positions_img, pos[0], pos[1], size_box)
+        PlotHeatmap(image, peak_positions_img, title='Most probable positions of Waldo', bar=False)
+    return peak_positions
+
+
 # ===============================================================
-# =                       One example                           =
+# =                 One example - Templates                     =
 # ===============================================================
 """
 Idea:
@@ -126,68 +172,19 @@ fftconvolve (much faster, similar results than convolve2d)
 gabor filter: http://matlabserver.cs.rug.nl/edgedetectionweb/web/edgedetection_params.html, http://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/AV0405/SIKLOSSY/bars.html
 """
 
+find_waldo('./data/images/04.jpg', stripe_template, 200, 100, 100, 20, 0.2, 5, 10)
+
 # Parameters
 image = './data/images/04.jpg'
-min_red, max_green, max_blue = 200, 100, 100
-min_dist_peak, thresh_peak, max_nber_peak = 20, 0.2, 5
-size_box = 10
-
-
-# Read Image and returns a binarized greyscale image with red pixels only
 image = plt.imread(image)
 reds = ExtractRed(image, min_red, max_green, max_blue)
 reds_grayscale = rgb2gray(reds)
-PlotHeatmap(image, reds, title='Binarized Red Pixels map', bar=False)
 
-# Shirt of Waldo, /!\ if use a non-symmetric template, flip it if use convolution (so that it does the same as correlation)
+# Waldo's shirt
 stripe_template = reds_grayscale[1170:1191, 1143:1151]
-stripe_template = np.fliplr(stripe_template)
-stripe_template = np.flipud(stripe_template)
 #stripe_template = StripeMotif(height=16, width=3, nber_stripe=4)
 
-t1 = time.time()
-# Look for template, heatmap of template in different regions
-score = scipy.signal.fftconvolve(reds_grayscale, stripe_template, mode='same')
-# Isolate peaks
-peak_positions = feature.corner_peaks(score, min_distance=min_dist_peak, indices=True, threshold_rel=thresh_peak, num_peaks=max_nber_peak)
-t2 = time.time()
-print('Elapsed time: {:03f}'.format(t2-t1))
-PlotHeatmap(image, score, title='Convolution score')
-
-# Draw a rectangle at the position of the peaks
-peak_positions_img = feature.corner_peaks(score, min_distance=min_dist_peak, indices=False, threshold_rel=thresh_peak, num_peaks=max_nber_peak)
-for pos in peak_positions:
-    DrawRectangle(peak_positions_img, pos[0], pos[1], size_box)
-PlotHeatmap(image, peak_positions_img, title='Most probable positions of Waldo', bar=False)
-
-
-# =================================
-# Danger: warzone :/
-# ToDo: Set the template for the glasses (Yes we hope this will help).
-# Note: the preprocessing is no longer used.
-# Parameters
-image = './data/images/04.jpg'  # ToDo: We also might use a picture from waldos face to get a glasses template.
-min_dist_peak, thresh_peak, max_nber_peak = 20, 0.2, 5
-size_box = 10
-
-# Read Image and returns a binarized greyscale image with red pixels only
-image = plt.imread(image)
-
-# Glasses of Waldo, /!\ if use a non-symmetric template, flip it if use convolution (so that it does the same as correlation)
-cp = np.copy(image)
-stripe_template = cp[1146:1154, 1144:1155]
-stripe_template = np.fliplr(stripe_template)
-stripe_template = np.flipud(stripe_template)
-
-t1 = time.time()
-# Look for template, heatmap of template in different regions
-score = scipy.signal.fftconvolve(image, stripe_template, mode='same')
-# Isolate peaks
-peak_positions = feature.corner_peaks(score, min_distance=min_dist_peak, indices=True, threshold_rel=thresh_peak, num_peaks=max_nber_peak)
-t2 = time.time()
-print('Elapsed time: {:03f}'.format(t2-t1))
-PlotHeatmap(image, score, title='Convolution score')
-peak_positions_img = feature.corner_peaks(score, min_distance=min_dist_peak, indices=False, threshold_rel=thresh_peak, num_peaks=max_nber_peak)
-for pos in peak_positions:
-    DrawRectangle(peak_positions_img, pos[0], pos[1], size_box)
-PlotHeatmap(image, peak_positions_img, title='Most probable positions of Waldo', bar=False)
+# Glasses
+image_grayscale = rgb2gray(np.copy(image))
+#edges = feature.canny(image, sigma_edge)
+glass_template = image_grayscale[1146:1154, 1144:1155]
