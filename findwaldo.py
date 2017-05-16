@@ -55,6 +55,7 @@ def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist
     t1 = time.time()
     # Look for template, heatmap of template in different regions
     score = scipy.signal.fftconvolve(grayscale, template, mode='same')
+    score = filters.scharr(score)
 
     # Isolate peaks
     peak_positions = feature.corner_peaks(score, min_distance=min_dist_peak, indices=True, threshold_rel=thresh_peak,
@@ -77,12 +78,12 @@ def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist
 # Test Templates
 image = './data/images/04.jpg'
 image = plt.imread(image)
-reds = ExtractRed(image, min_red, max_green, max_blue)
+reds = ExtractRed(image, 200, 100, 100)
 reds_grayscale = rgb2gray(reds)
 
 # Waldo's shirt
 stripe_template = reds_grayscale[1170:1191, 1143:1151]
-#stripe_template = StripeMotif(height=16, width=3, nber_stripe=4)
+stripe_template = StripeMotif(height=16, width=3, nber_stripe=4)
 
 # Glasses
 image_grayscale = rgb2gray(np.copy(image))
@@ -94,7 +95,7 @@ head_template = image_grayscale[1139:1160, 1142:1154]
 
 # One example
 find_waldo_fftconvolve('./data/images/04.jpg', stripe_template, 200, 100, 100, 20, 0.2, 5, 10, extract_red=True)
-find_waldo_fftconvolve('./data/images/04.jpg', glass_template, 200, 100, 100, 200, 0.2, 5, 10, extract_red=False)
+find_waldo_fftconvolve('./data/images/04.jpg', glass_template, 200, 100, 100, 200, 0.2, 10, 10, extract_red=False)
 find_waldo_fftconvolve('./data/images/04.jpg', head_template, 200, 100, 100, 200, 0.2, 5, 10, extract_red=False)
 
 

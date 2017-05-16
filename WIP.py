@@ -1,152 +1,118 @@
 # -*- coding: utf-8 -*-
 """
 Signal and Image Processing 2017 by Raphael Sznitman.
-
 Team Project
 - Livio Baetscher
 - Manuela Haefliger
 - Marc-Antoine Jacques
-
 Python Version: 3.6.1
 """
 
 """
-- Need to build a library of patterns: one full, one torso, one head...
-- Return the position with the highest score in all arrays
-
-Parameters:
-- template
-- pyramid nber of layers
-- pyramid downscale factor (reduction of dimension at each successive pyramid level)
-
+Maybe try a two pass approach: - first use convolution to detect possible positions
+                               - wherever there is signal, use circle fitting in the cropped neighbourhood to detect the glasses
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-import skimage.transform
-import scipy.signal
-import time
-from skimage import filters
+from preprocessing_utils import *
+
+# ===============================================================
+# =             Method 1 : With convolution                     =
+# ===============================================================
 
 
-def findwaldo(img, template):
+def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist_peak, thresh_peak, max_nber_peak, size_box,
+               extract_red=True, plot=True):
     """
-    Returns the position of Waldo in image
-    :param img: path to image file
-    :param template: path to image file representing the researched pattern
-    :return: a 2-tuple corresponding to the position of Waldo
+    Returns a list of possible positions of waldo in an image file. Search is done by fftconvolution with a template.
+    :param img: path to an RGB image file
+    :param template: a 2D (grayscale) numpy array used for searching waldo. /!\ gets flipped to obtain same effect as a 
+    correlation.
+    :param extract_red: boolean, should the convolution be performed on red pixels only?
+    :param min_red: numeric, minimum value in R channel to class a pixel as red
+    :param max_green: numeric, maximum value in G channel to class a pixel as red
+    :param max_blue: numeric, maximum value in B channel to class a pixel as red
+    :param min_dist_peak: int, minimal distance between peaks of detection in pixel
+    :param thresh_peak: float, relative intensity of a peak compare to max intensity
+    :param max_nber_peak: int, max number of peaks
+    :param size_box: int, size of the box for plotting Waldo's position
+    :param plot: boolean, print the plots?
+    :return: a 2D numpy array with Waldo's most probable positions
     """
-    # 1) Read images
-    img = plt.imread(img)
-    template = plt.imread(template)
-    # 2) Gaussian pyramid img (tuple of arrays)
-    pyramid = tuple(skimage.transform.pyramid_gaussian(img, downscale=2))
-    del img  # only use pyramid
-    # 3) Convolution with template
-    out = scipy.signal.convolve2d(pyramid[0][..., 0], template[..., 0], mode='same')
-    # 4) Noise removal?
+    image = plt.imread(img)
+    # Isolate red pixels
+    if extract_red:
+        reds = ExtractRed(image, min_red, max_green, max_blue)
+        grayscale = rgb2gray(reds)
+        if plot:
+            PlotHeatmap(image, reds, title='Binarized Red Pixels map', bar=False)
+    else:
+        grayscale = rgb2gray(image)
 
-    return out
+    # If use a non-symmetric template, flip it if for convolution (so that it does the same as correlation)
+    template = np.fliplr(template)
+    template = np.flipud(template)
 
+    t1 = time.time()
+    # Look for template, heatmap of template in different regions
+    score = scipy.signal.fftconvolve(grayscale, template, mode='same')
+    score = filters.scharr(score)
 
-i = plt.imread('./data/images/27.jpg')
-t = plt.imread('./template/stripes2.jpg')
-pi = tuple(skimage.transform.pyramid_gaussian(i, downscale=2))
-pt = tuple(skimage.transform.pyramid_gaussian(t, downscale=2))
+    # Isolate peaks
+    peak_positions = feature.corner_peaks(score, min_distance=min_dist_peak, indices=True, threshold_rel=thresh_peak,
+                                          num_peaks=max_nber_peak)
+    t2 = time.time()
+    print('Elapsed time: {:03f}'.format(t2 - t1))
+    if plot:
+        PlotHeatmap(image, score, title='Convolution score')
 
-t0 = time.time()
-temp = scipy.signal.convolve2d(pi[0][..., 0], pt[4][..., 0], mode='same')
-temp2 = scipy.signal.convolve2d(pi[0][..., 1], pt[4][..., 1], mode='same')
-temp3 = scipy.signal.convolve2d(pi[0][..., 2], pt[4][..., 2], mode='same')
-#temp = findwaldo('./data/images/01.jpg', './template/full.png')
-t1 = time.time()
-print('Ellapsed time: {:02f}'.format(t1-t0))
+    # Draw a rectangle at the position of the peaks -> this is slow and redundant, could be improved
+    if plot:
+        peak_positions_img = feature.corner_peaks(score, min_distance=min_dist_peak, indices=False,
+                                              threshold_rel=thresh_peak, num_peaks=max_nber_peak)
+        for pos in peak_positions:
+            DrawRectangle(peak_positions_img, pos[0], pos[1], size_box)
+        PlotHeatmap(image, peak_positions_img, title='Most probable positions of Waldo', bar=False)
+    return peak_positions
 
-temp4 = temp + temp2 + temp3
-plt.figure()
-plt.imshow(temp4)
-plt.colorbar()
-plt.show()
-np.where(temp4 == temp4.max())
+# ----
+# Test Templates
+image = './data/images/27.jpg'
+image = plt.imread(image)
+reds = ExtractRed(image, 150, 100, 100)
+reds_grayscale = rgb2gray(reds)
 
+# Waldo's shirt
+stripe_template = reds_grayscale[788:839, 1327:1377]
+#stripe_template = StripeMotif(height=16, width=3, nber_stripe=4)
 
-# =================================================
-def rgb2gray(rgb):
-    return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
+# Glasses
+image_grayscale = rgb2gray(np.copy(image))
+#edges = feature.canny(image, sigma_edge)
+glass_template = image_grayscale[1146:1154, 1144:1155]
 
-def RemoveBackground(img, method, window_size = 25, k = 0.8):
-    """
-    Create a binary image separating foreground from background
-    :param img: a numpy array
-    :param method: one of ['otsu', 'niblack', 'sauvola']
-    :param window_size: size of neighborhood used to define threshold, used in ['niblack', 'sauvola']
-    :param k: used to tune local threshold, used in ['niblack', 'sauvola']
-    :return: numpy array, representing a binary image
-    """
-    image = np.copy(img)
-    if method == 'otsu':
-        threshold = filters.threshold_otsu(img)
-    elif method == 'niblack':
-        threshold = filters.threshold_niblack(img, window_size, k)
-    elif method == 'sauvola':
-        threshold = filters.threshold_sauvola(img)
-    #image[image <= threshold] = 255
-    image[image >= threshold] = 0
-    return image
+# head
+head_template = image_grayscale[1139:1160, 1142:1154]
 
-plt.imshow(i[...,0]); plt.colorbar()  # Red channel
-i2 = np.copy(i)
-i2[np.where(i2[..., 1] >= 100)] = 0
-i2[np.where(i2[..., 2] >= 100)] = 0
+# One example
+find_waldo_fftconvolve('./data/images/27.jpg', stripe_template, 150, 100, 100, 20, 0.2, 5, 10, extract_red=True)
+find_waldo_fftconvolve('./data/images/27.jpg', glass_template, 150, 100, 100, 200, 0.2, 5, 10, extract_red=False)
+find_waldo_fftconvolve('./data/images/27.jpg', head_template, 150, 100, 100, 200, 0.2, 5, 10, extract_red=False)
 
 
 
-i2 = rgb2gray(i2)
-plt.imshow(i2)
+# ===============================================================
+# =               Method 2 : With circles fitting               =
+# ===============================================================
+"""
+http://www.imagexd.org/tutorial/lessons/1_ransac.html
+"""
+from skimage import feature, color
+from skimage.measure import ransac, CircleModel
 
-temp = RemoveBackground(i2, 'sauvola', window_size=25, k=0.8)
-plt.figure()
-plt.subplot(121)
-plt.imshow(i2, cmap = 'gray')
-plt.subplot(122)
-plt.imshow(temp, cmap = 'gray')
-plt.show()
-del temp
+image = './data/images/27.jpg'
+image = plt.imread(image)
+edges = feature.canny(color.rgb2gray(image), sigma=2)
 
-
-# =================================================
-# Keep only red
-i2 = np.copy(i)
-i2 = rgb2gray(i2)
-
-
-# Create a red and white stripe pattern
-stripes = np.zeros((70, 90))
-# Create white stripes
-stripes[0:10, :] = 255
-stripes[20:30, :] = 255
-stripes[40:50, :] = 255
-stripes[60:70, :] = 255
-plt.imshow(stripes, cmap='gray'); plt.colorbar()
-
-
-t2 = np.copy(t)
-t2[np.where(t2[..., 0] <= 200)] = 0
-t2[np.where(t2[..., 1] >= 100)] = 0
-t2[np.where(t2[..., 2] >= 100)] = 0
-t2 = rgb2gray(t2)
-
-pi = tuple(skimage.transform.pyramid_gaussian(i2, downscale=2))
-pt = tuple(skimage.transform.pyramid_gaussian(t2, downscale=2))
-
-t0 = time.time()
-temp = scipy.signal.convolve2d(pi[0], stripes, mode='same')
-#temp = findwaldo('./data/images/01.jpg', './template/full.png')
-t1 = time.time()
-print('Ellapsed time: {:02f}'.format(t1-t0))
-plt.imshow(temp); plt.colorbar()
-
-plt.figure()
-plt.imshow(pi[0])
-plt.imshow(temp, alpha=0.5)
-plt.show()
+points = np.array(np.nonzero(edges)).T
+model_robust, inliers = ransac(points, CircleModel, min_samples=3,
+                               residual_threshold=2, max_trials=1000)
