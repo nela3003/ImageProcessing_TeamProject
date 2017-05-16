@@ -11,7 +11,7 @@ Python Version: 3.6.1
 from preprocessing_utils import *
 
 # ===============================================================
-# =                        With convolution                     =
+# =             Method 1 : With convolution                     =
 # ===============================================================
 
 
@@ -68,11 +68,8 @@ def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist
         PlotHeatmap(image, peak_positions_img, title='Most probable positions of Waldo', bar=False)
     return peak_positions
 
-
-
-# ===============================================================
-# =                        Test Templates                       =
-# ===============================================================
+# ----
+# Test Templates
 image = './data/images/04.jpg'
 image = plt.imread(image)
 reds = ExtractRed(image, min_red, max_green, max_blue)
@@ -90,9 +87,14 @@ glass_template = image_grayscale[1146:1154, 1144:1155]
 # head
 head_template = image_grayscale[1139:1160, 1142:1154]
 
-# ===============================================================
-# =                 One example - Templates                     =
-# ===============================================================
+# One example
 find_waldo_fftconvolve('./data/images/04.jpg', stripe_template, 200, 100, 100, 20, 0.2, 5, 10, extract_red=True)
 find_waldo_fftconvolve('./data/images/04.jpg', glass_template, 200, 100, 100, 200, 0.2, 5, 10, extract_red=False)
 find_waldo_fftconvolve('./data/images/04.jpg', head_template, 200, 100, 100, 200, 0.2, 5, 10, extract_red=False)
+
+
+
+# ===============================================================
+# =               Method 2 : With circles fitting               =
+# ===============================================================
+
