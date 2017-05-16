@@ -8,6 +8,11 @@ Team Project
 Python Version: 3.6.1
 """
 
+"""
+Maybe try a two pass approach: - first use convolution to detect possible positions
+                               - wherever there is signal, use circle fitting in the cropped neighbourhood to detect the glasses
+"""
+
 from preprocessing_utils import *
 
 # ===============================================================
@@ -97,4 +102,16 @@ find_waldo_fftconvolve('./data/images/04.jpg', head_template, 200, 100, 100, 200
 # ===============================================================
 # =               Method 2 : With circles fitting               =
 # ===============================================================
+"""
+http://www.imagexd.org/tutorial/lessons/1_ransac.html
+"""
+from skimage import feature, color
+from skimage.measure import ransac, CircleModel
 
+image = './data/images/27.jpg'
+image = plt.imread(image)
+edges = feature.canny(color.rgb2gray(image), sigma=2)
+
+points = np.array(np.nonzero(edges)).T
+model_robust, inliers = ransac(points, CircleModel, min_samples=3,
+                               residual_threshold=2, max_trials=1000)
