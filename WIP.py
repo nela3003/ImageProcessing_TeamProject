@@ -20,8 +20,9 @@ from preprocessing_utils import *
 # ===============================================================
 
 
-def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist_peak, thresh_peak, max_nber_peak, size_box,
-               extract_red=True, plot=True):
+
+def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist_peak, thresh_peak,
+                           max_nber_peak, size_box, extract_red=True, plot=True):
     """
     Returns a list of possible positions of waldo in an image file. Search is done by fftconvolution with a template.
     :param img: path to an RGB image file
@@ -55,7 +56,12 @@ def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist
     t1 = time.time()
     # Look for template, heatmap of template in different regions
     score = scipy.signal.fftconvolve(grayscale, template, mode='same')
+    # Sharpening filter to erase all signal in homogeneous regions, bring back between -1 and 1
     score = filters.scharr(score)
+
+    #HPfilter = -np.ones((5,5))*2
+    #HPfilter[2,2] = 8
+    #score = scipy.signal.fftconvolve(score, HPfilter, mode='same')
 
     # Isolate peaks
     peak_positions = feature.corner_peaks(score, min_distance=min_dist_peak, indices=True, threshold_rel=thresh_peak,
@@ -74,8 +80,57 @@ def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist
         PlotHeatmap(image, peak_positions_img, title='Most probable positions of Waldo', bar=False)
     return peak_positions
 
+
 # ----
 # Test Templates
+# Test Templates
+image = './data/images/04.jpg'
+image = plt.imread(image)
+reds = ExtractRed(image, 200, 100, 100)
+reds_grayscale = rgb2gray(reds)
+
+# Waldo's shirt
+stripe_template = reds_grayscale[1170:1191, 1143:1151]
+stripe_template = StripeMotif(height=8, width=3, nber_stripe=4) # Works better when transposed???????
+
+# Glasses
+image_grayscale = rgb2gray(np.copy(image))
+#edges = feature.canny(image, sigma_edge)
+glass_template = image_grayscale[1146:1154, 1144:1155]
+
+# head
+head_template = image_grayscale[1139:1160, 1142:1154]
+
+# One example
+find_waldo_fftconvolve('./data/images/04.jpg', stripe_template, 200, 100, 100, 20, 0.2, 10, 10, extract_red=True)
+find_waldo_fftconvolve('./data/images/04.jpg', glass_template, 200, 100, 100, 200, 0.2, 10, 10, extract_red=False)
+find_waldo_fftconvolve('./data/images/04.jpg', head_template, 200, 100, 100, 200, 0.2, 5, 10, extract_red=False)
+
+
+
+# ===============================================================
+# =               Method 2 : With circles fitting               =
+# ===============================================================
+"""
+http://www.imagexd.org/tutorial/lessons/1_ransac.html
+"""
+from skimage import feature, color
+from skimage.measure import ransac, CircleModel
+
+image = './data/images/27.jpg'
+image = plt.imread(image)
+edges = feature.canny(color.rgb2gray(image), sigma=2)
+
+points = np.array(np.nonzero(edges)).T
+model_robust, inliers = ransac(points, CircleModel, min_samples=3,
+                               residual_threshold=2, max_trials=1000)
+
+
+
+
+
+
+
 image = './data/images/27.jpg'
 image = plt.imread(image)
 reds = ExtractRed(image, 150, 100, 100)
@@ -97,22 +152,3 @@ head_template = image_grayscale[1139:1160, 1142:1154]
 find_waldo_fftconvolve('./data/images/27.jpg', stripe_template, 150, 100, 100, 20, 0.2, 5, 10, extract_red=True)
 find_waldo_fftconvolve('./data/images/27.jpg', glass_template, 150, 100, 100, 200, 0.2, 5, 10, extract_red=False)
 find_waldo_fftconvolve('./data/images/27.jpg', head_template, 150, 100, 100, 200, 0.2, 5, 10, extract_red=False)
-
-
-
-# ===============================================================
-# =               Method 2 : With circles fitting               =
-# ===============================================================
-"""
-http://www.imagexd.org/tutorial/lessons/1_ransac.html
-"""
-from skimage import feature, color
-from skimage.measure import ransac, CircleModel
-
-image = './data/images/27.jpg'
-image = plt.imread(image)
-edges = feature.canny(color.rgb2gray(image), sigma=2)
-
-points = np.array(np.nonzero(edges)).T
-model_robust, inliers = ransac(points, CircleModel, min_samples=3,
-                               residual_threshold=2, max_trials=1000)

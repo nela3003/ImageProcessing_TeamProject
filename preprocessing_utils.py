@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import skimage.transform
 import scipy.signal
 import time
-from skimage import filters, feature
+from skimage import filters, feature, morphology
 from math import pi
 
 

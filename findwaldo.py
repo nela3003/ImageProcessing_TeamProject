@@ -20,8 +20,8 @@ from preprocessing_utils import *
 # ===============================================================
 
 
-def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist_peak, thresh_peak, max_nber_peak, size_box,
-               extract_red=True, plot=True):
+def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist_peak, thresh_peak,
+                           max_nber_peak, size_box, extract_red=True, plot=True):
     """
     Returns a list of possible positions of waldo in an image file. Search is done by fftconvolution with a template.
     :param img: path to an RGB image file
@@ -55,6 +55,7 @@ def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist
     t1 = time.time()
     # Look for template, heatmap of template in different regions
     score = scipy.signal.fftconvolve(grayscale, template, mode='same')
+    # Sharpening filter to erase all signal in homogeneous regions, bring back between -1 and 1
     score = filters.scharr(score)
 
     # Isolate peaks
