@@ -42,6 +42,7 @@ images to identify the characters in them.
 
 Nice links:
 http://www.cse.psu.edu/~rtc12/CSE486/lecture07.pdf
+
 https://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.signal.correlate2d.html (watch closely the example)
 
 - Use convolution in the Fourier's space (fftconvolve) we perform exactly the same operation as regular convolution but
