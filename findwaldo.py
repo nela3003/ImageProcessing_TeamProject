@@ -84,26 +84,30 @@ reds_grayscale = rgb2gray(reds)
 
 # Waldo's shirt
 stripe_template = reds_grayscale[1170:1191, 1143:1151]
-stripe_template = StripeMotif(height=16, width=3, nber_stripe=4)
+stripe_template = StripeMotif(height=8, width=3, nber_stripe=4) # Works better when transposed???????
 
 # Glasses
 image_grayscale = rgb2gray(np.copy(image))
+image_grayscale = image_grayscale - np.mean(image_grayscale)
 #edges = feature.canny(image, sigma_edge)
 glass_template = image_grayscale[1146:1154, 1144:1155]
 
 # head
 head_template = image_grayscale[1139:1160, 1142:1154]
-
+# Get head from another image
 head_template2 = plt.imread('./data/images/27.jpg')
 head_template2 = rgb2gray(head_template)
+head_template2 = head_template - np.mean(head_template)
 head_template2 = head_template[746:780, 1340:1370]
 head_template2 = tuple(skimage.transform.pyramid_gaussian(head_template, downscale=2))
 head_template2 = head_template2[0]
+head_template2 -= np.mean(head_template2)
+
 
 # One example
 find_waldo_fftconvolve('./data/images/08.jpg', stripe_template, 150, 100, 100, 20, 0.2, 5, 10, extract_red=True)
 find_waldo_fftconvolve('./data/images/04.jpg', glass_template, 200, 100, 100, 200, 0.2, 10, 10, extract_red=False)
-find_waldo_fftconvolve('./data/images/07.jpg', head_template2, 200, 100, 100, 200, 0.2, 20, 10, extract_red=False)
+find_waldo_fftconvolve('./data/images/04.jpg', head_template2, 200, 100, 100, 200, 0.2, 10, 10, extract_red=False)
 
 
 
