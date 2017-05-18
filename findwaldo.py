@@ -48,15 +48,15 @@ def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist
     else:
         grayscale = rgb2gray(image)
 
+    grayscale -= np.mean(grayscale)
     # If use a non-symmetric template, flip it if for convolution (so that it does the same as correlation)
     template = np.fliplr(template)
     template = np.flipud(template)
+    template -= np.mean(template)
 
     t1 = time.time()
     # Look for template, heatmap of template in different regions
     score = scipy.signal.fftconvolve(grayscale, template, mode='same')
-    # Sharpening filter to erase all signal in homogeneous regions, bring back between -1 and 1
-    score = filters.scharr(score)
 
     # Isolate peaks
     peak_positions = feature.corner_peaks(score, min_distance=min_dist_peak, indices=True, threshold_rel=thresh_peak,
@@ -94,10 +94,16 @@ glass_template = image_grayscale[1146:1154, 1144:1155]
 # head
 head_template = image_grayscale[1139:1160, 1142:1154]
 
+head_template2 = plt.imread('./data/images/27.jpg')
+head_template2 = rgb2gray(head_template)
+head_template2 = head_template[746:780, 1340:1370]
+head_template2 = tuple(skimage.transform.pyramid_gaussian(head_template, downscale=2))
+head_template2 = head_template2[0]
+
 # One example
-find_waldo_fftconvolve('./data/images/04.jpg', stripe_template, 200, 100, 100, 20, 0.2, 5, 10, extract_red=True)
+find_waldo_fftconvolve('./data/images/08.jpg', stripe_template, 150, 100, 100, 20, 0.2, 5, 10, extract_red=True)
 find_waldo_fftconvolve('./data/images/04.jpg', glass_template, 200, 100, 100, 200, 0.2, 10, 10, extract_red=False)
-find_waldo_fftconvolve('./data/images/04.jpg', head_template, 200, 100, 100, 200, 0.2, 5, 10, extract_red=False)
+find_waldo_fftconvolve('./data/images/07.jpg', head_template2, 200, 100, 100, 200, 0.2, 20, 10, extract_red=False)
 
 
 

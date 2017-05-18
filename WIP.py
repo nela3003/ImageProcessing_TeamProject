@@ -115,7 +115,7 @@ head_template2 -= np.mean(head_template2)
 # One example
 find_waldo_fftconvolve('./data/images/04.jpg', stripe_template.T, 200, 100, 100, 20, 0.2, 10, 10, extract_red=True)
 find_waldo_fftconvolve('./data/images/04.jpg', glass_template, 200, 100, 100, 200, 0.2, 10, 10, extract_red=False)
-find_waldo_fftconvolve('./data/images/04.jpg', head_template2, 200, 100, 100, 200, 0.2, 10, 10, extract_red=False)
+find_waldo_fftconvolve('./data/images/04.jpg', head_template2, 200, 100, 100, 200, 0.2, 1, 10, extract_red=False)
 
 
 
