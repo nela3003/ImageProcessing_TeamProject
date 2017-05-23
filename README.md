@@ -57,4 +57,33 @@ BEFORE performing the convolution gives us a nice workaround.
 
 
 
+### New development: filters bank
 
+Because neither head only or stripes only matching seems to convince, we want to build a bank of filters, with the idea
+that we could then combine the heatmaps of these filters and return hottest area as most probably position of Waldo.
+
+I've been through all images and have extracted some features from Waldo: see ./template/features.tsv  the idea is to 
+use these filters to know their dimensions and characteristics
+
+The library would comprise 2 different types of filters: stripes and head. How to define these filters:
+- stripes filters are defined by the number of stripes and height of stripes. It seems that 4 stripes look reasonable, 
+with an equal height for red or white stripes. Total height of the filter should vary between 12 and 28 pixels (i.e.
+stripes between 3 and 7 pixel high).
+
+- faces: if you go through the images it appears that faces can be pretty different from one picture to another, but it
+seems that they are fixed models that are then reused. But how many and which? For that I've just measured the dimensions
+of the faces, do some plotting around see: analysis_head_features.R. In the end I would just create 2 groups of faces 
+one for "regular" (ratio height/width = 1.8) and one for "long" faces (ratio height/width = 2.3). With 4 sizes (height
+without hair): 5, 12, 15, 30 px.  
+
+
+
+ 
+ #### Preprocessing and hit refinement
+ 
+ I would keep the extraction of red pixels when it comes to stripe detection. To select what is a red pixel a better 
+ idea would be to use what humans see as red head of fixed thresholhd in RGB space.
+ 
+ For face detection I would work in grayscale space. I'm not sure, but maybe a Canny edge detector could help as well.
+ 
+ A final hit refinement could look for circles that would fit Waldo's glasses.
