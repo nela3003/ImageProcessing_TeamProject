@@ -82,7 +82,7 @@ without hair): 5, 12, 15, 30 px.
  #### Preprocessing and hit refinement
  
  I would keep the extraction of red pixels when it comes to stripe detection. To select what is a red pixel a better 
- idea would be to use what humans see as red head of fixed thresholhd in RGB space.
+ idea would be to use what humans see as red instead of fixed threshold in RGB space.
  
  For face detection I would work in grayscale space. I'm not sure, but maybe a Canny edge detector could help as well.
  
