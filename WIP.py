@@ -153,3 +153,24 @@ for meth in methods:
     PlotHeatmap(img, res, title=meth)
 
     plt.show()
+
+
+
+############# Filter Bank ####################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
