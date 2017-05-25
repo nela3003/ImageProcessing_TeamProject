@@ -112,7 +112,7 @@ def ExtractRed(image, minimum_red = 150, threshold_green = 100, threshold_blue =
 
 def ExtractBlack(image, threshold_red = 80, threshold_green = 80, threshold_blue = 80):
     """
-    Isolate red color from an image
+    Isolate black color from an image
     :param img: a 3D numpy array
     :return: a 3D numpy array with red zones
     """
@@ -140,3 +140,20 @@ def DrawRectangle(image, x, y, box_size):
     image[(x-box_size):(x+box_size), (y-box_size):(y+box_size)] = True
 
 
+def FindMaximaListArray(response_array):
+    """
+    Go through a list of arrays and returns the maximum value and its position
+    :param response_array: a list of 2D-arrays
+    :return: 
+    """
+    max_sf = 0
+    loc_sf = None  # [x, y, array index]
+    arr_sf = None
+    i = 0
+    for arr in response_array:
+        if arr.max() > max_sf:
+            max_sf = arr.max()
+            loc_sf = np.unravel_index(arr.argmax(), arr.shape)
+            arr_sf = i
+        i += 1
+    return loc_sf, arr_sf

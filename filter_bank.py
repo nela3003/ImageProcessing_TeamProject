@@ -18,15 +18,35 @@ def GlassesBank(px = [10, 12, 14, 16, 18, 20, 22, 24, 26]):
         bank.append(tmplt)
     return bank
 
-stripes_bank = StripeBank(heights=[18, 24, 30, 36], width=2, nber_stripes=6)
-glasses_bank = GlassesBank()
+def HeadBank(px = [5, 12, 15, 30]):
+    from scipy.misc import imresize
+    bank = []
+    long = plt.imread('./template/head/05.png')
+    long = rgb2gray(long)
+    wide = plt.imread('./template/head/27.png')
+    wide = rgb2gray(wide)
+    for p in px:
+        tmplt_wide = imresize(wide, (int(wide.shape[0] / wide.shape[1] * p), p),
+                         interp='bilinear', mode=None)
+        tmplt_long = imresize(long, (int(long.shape[0] / long.shape[1] * p), p),
+                         interp='bilinear', mode=None)
+        bank.append(tmplt_long)
+        bank.append(tmplt_wide)
+    return bank
 
-total_bank = stripes_bank + glasses_bank
+
+stripes_bank = StripeBank(heights=[18, 24, 30, 36], width=4, nber_stripes=6)
+glasses_bank = GlassesBank()
+heads_bank = HeadBank()
+
+total_bank = stripes_bank + glasses_bank + heads_bank
 
 
 ######### FFT Version #####################
-image = './data/images/09.jpg'
+t=time.time()
+image = './data/images/04.jpg'
 image = plt.imread(image)
+grayscale = rgb2gray(image)
 reds = ExtractRed(image, 150, 100, 100)
 grayscale_reds = rgb2gray(reds)
 blacks = ExtractBlack(image, 150, 150, 150)
@@ -36,19 +56,22 @@ grayscale -= np.mean(grayscale)
 
 response = []
 i = 0 #  First filters are stripes
-for filt in stripes_bank:
+for filt in total_bank:
     template = filt.copy()
     template = np.fliplr(template)
     template = np.flipud(template)
     template -= int(np.mean(template))
     if i <= 3:  # stripes
         score = scipy.signal.fftconvolve(grayscale_reds, template, mode='same')
-    else:  # glasses
+    elif i > 3 and i <= 12:  # glasses
         score = scipy.signal.fftconvolve(grayscale_blacks, template, mode='same')
+    else:  # heads
+        score = scipy.signal.fftconvolve(grayscale, template, mode='same')
     score = (score - score.mean())/score.std()
     response.append(score)
     i += 1
 
+print('elpased time: {:02f}'.format(time.time() - t))
 temp = sum(response)
 peak_positions = feature.corner_peaks(temp, min_distance=200, indices=True, threshold_rel=0.2, num_peaks=1)
 peak_positions_img = feature.corner_peaks(temp, min_distance=200, indices=False, threshold_rel=0.2, num_peaks=1)
