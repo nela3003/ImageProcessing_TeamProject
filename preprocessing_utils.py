@@ -26,7 +26,6 @@ import scipy.signal
 import time
 from skimage import filters, feature, morphology
 from math import pi
-import cv2
 
 
 def rgb2gray(rgb):
