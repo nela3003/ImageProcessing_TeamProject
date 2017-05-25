@@ -1,24 +1,25 @@
-Image	Head_height_with_hair	Head_height_without_hair	Head_width	Direction_sight	Stripe_height_red	Stripe_height_white	Nber_vertical_stripes
-1	20	14	12	center	3	2	6
-2	20	14	11	right	3	3	4
-3	22	16	11	center	3	3	2
-4	21	16	10	right	4	3	7
-5	27	22	14	center	4	3	8
-6	27	19	13	right	6	5	9
-7	55	45	19	right	11	7	6
-8	10	NA	5	right	NA	?	5
-9	21	15	10	right	4	3	6
-10	15	11	8	right	3	3	9
-11	15	11	8	right	3	3	8
-12	36	26	17	right	7	6	8
-13	20	14	10	center	NA	NA	0
-15	25	20	11	center	NA	NA	1
-17	28	21	14	right	5	4	6
-18	38	27	28	right	5	5	2
-20	18	13	9	right	3	3	7
-21	41	31	17	right	6	4	6
-22	43	30	17	right	NA	NA	2
-23	NA	NA	NA	right	NA	NA	NA
-25	29	24	10	right	NA	NA	0
-26	27	20	14	right	NA	NA	0
-27	48	34	13	right	7	6	9
+Image	Head_height_with_hair	Head_height_without_hair	Head_width	Direction_sight	Stripe_height_red	Stripe_height_white	Nber_vertical_stripes	Angle beanie (compared to horizontal, always tilted in same direction)	Diameter pompom (only red part)	White stripe thickness	Red stripe thickness	Black separation	Note						
+1	20	14	12	center	3	2	6	60	3.6	2.8	2.2	1							
+2	20	14	11	right	3	3	4	35	2.2	1.4	1.6	0.5	Low res						
+3	22	16	11	center	3	3	2	45	2.8	1.4	1.5	0.5							
+4	21	16	10	right	4	3	7	42	2.8	2.4	2.6	1							
+5	27	22	14	center	4	3	8	45	4	2.8	2.8	1.2							
+6	27	19	13	right	6	5	9	0	5	2	5	1.5	Perfect template?						
+7	55	45	19	right	11	7	6	45	7	5	4	1	Freak						
+8	10	?	5	right	NA	?	5	NA	NA	NA	NA	NA	Low res						
+9	21	15	10	right	4	3	6	68	4.5	2	2	1							
+10	15	11	8	right	3	3	9	68	3.2	1.5	1.5	0.75							
+11	15	11	8	right	3	3	8	45	1.5	1.2	2	0.5							
+12	36	26	17	right	7	6	8	53	6	3.5	4	2							
+13	20	14	10	center	NA	NA	0	50	NA	2	2.5	1	head only						
+15	25	20	11	center	NA	NA	1	48	4	1.5	1.5	1	head + shoulders						
+17	28	21	14	right	5	4	6	50	NA	3	3	1							
+18	38	27	28	right	5	5	2	50	5.5	4	3.8	1.5	head + shoulders						
+20	18	13	9	right	3	3	7	68	NA	NA	NA	NA	Low res						
+21	41	31	17	right	6	4	6	45	7	4	3.5	1							
+22	43	30	17	right	NA	NA	2	45	4	4.5	3	1.5	head + shoulders						
+23	?	?	?	right	NA	NA	NA	NA	NA	NA	NA	NA	Low res						
+25	29	24	10	right	NA	NA	0	50	4	2.8	2.8	1	head only						
+26	27	20	14	right	NA	NA	0	45	4	2.8	2.8	1	head only						
+27	48	34	13	right	7	6	9	35	5	4.2	5	2							
+																			
