@@ -25,29 +25,37 @@ total_bank = stripes_bank + glasses_bank
 
 
 ######### FFT Version #####################
-image = './data/images/04.jpg'
+image = './data/images/09.jpg'
 image = plt.imread(image)
-#reds = ExtractRed(image, 150, 100, 100)
+reds = ExtractRed(image, 150, 100, 100)
+grayscale_reds = rgb2gray(reds)
+blacks = ExtractBlack(image, 150, 150, 150)
+grayscale_blacks = rgb2gray(blacks)
 grayscale = rgb2gray(image)
 grayscale -= np.mean(grayscale)
 
 response = []
-for filt in glasses_bank:
+i = 0 #  First filters are stripes
+for filt in stripes_bank:
     template = filt.copy()
     template = np.fliplr(template)
     template = np.flipud(template)
     template -= int(np.mean(template))
-    score = scipy.signal.fftconvolve(grayscale, template, mode='same')
+    if i <= 3:  # stripes
+        score = scipy.signal.fftconvolve(grayscale_reds, template, mode='same')
+    else:  # glasses
+        score = scipy.signal.fftconvolve(grayscale_blacks, template, mode='same')
     score = (score - score.mean())/score.std()
     response.append(score)
+    i += 1
 
 temp = sum(response)
-peak_positions = feature.corner_peaks(temp, min_distance=200, indices=True, threshold_rel=0.2, num_peaks=10)
-peak_positions_img = feature.corner_peaks(temp, min_distance=200, indices=False, threshold_rel=0.2, num_peaks=10)
+peak_positions = feature.corner_peaks(temp, min_distance=200, indices=True, threshold_rel=0.2, num_peaks=1)
+peak_positions_img = feature.corner_peaks(temp, min_distance=200, indices=False, threshold_rel=0.2, num_peaks=1)
 for pos in peak_positions:
     DrawRectangle(peak_positions_img, pos[0], pos[1], 15)
 PlotHeatmap(temp, peak_positions_img, title='Most probable positions of Waldo', bar=True)
-
+PlotHeatmap(image, temp)
 
 
 ############### Open CV CCOR #########
