@@ -191,7 +191,7 @@ for i in range(4):
 plt.show()
 
 t=time.time()
-image = './data/images/03.jpg'
+image = './data/images/06.jpg'
 image = plt.imread(image)
 reds = ExtractRed(image, 150, 100, 100)
 grayscale_reds = rgb2gray(reds)
@@ -210,7 +210,7 @@ for filt in hatshirtRW_bank:
     template = np.flipud(template)
     template -= int(np.mean(template))
     score = scipy.signal.fftconvolve(rw_image, template, mode='same')
-    #score = (score - score.mean())/score.std()
+    score = (score - score.mean())/score.std()
     response.append(score)
 
 print('elpased time: {:02f}'.format(time.time() - t))
