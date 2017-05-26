@@ -93,6 +93,45 @@ def StripeMotif(height, width, nber_stripe=4):
     return stripes
 
 
+def HatMotif(angle, pompom_radius, white_thick, red_thick, black_thick, width=2):
+    from scipy.ndimage.interpolation import rotate
+    height = pompom_radius + white_thick + red_thick + 2*black_thick
+    hat = np.zeros((height, width))
+    hat[:(pompom_radius + 1), :] = 255
+    hat[pompom_radius+2*black_thick+white_thick:, :] = 255
+    hat = rotate(hat, angle, cval=0)
+    hat[hat >= 100] = 255
+    hat[hat < 100] = 0
+    return hat
+
+
+def HatShirtMotif(shirt_stripe_thickness, shirt_stripe_nber, distance_hat_shirt=1.5, angle=45):
+    """
+    Create a whole Waldo model in red stripes
+    :param shirt_stripe_thickness: integer, red stripe thickness of the shirt
+    :param shirt_stripe_nber: integer, number stripes in shirt
+    :param distance_hat_shirt: float, distance between bottom of hat and top of shirt, distance in hat height unit
+    :param angle: float, angle of the hat compared to horizontal
+    :return: a 2D binarized np array
+    """
+    from scipy.ndimage.interpolation import rotate
+    # Create a square hat with 2 red stripes
+    hat_stripe_thickness = int(0.7373 * shirt_stripe_thickness - 0.4249)
+    hat = StripeMotif(3*hat_stripe_thickness, 3*hat_stripe_thickness, 3)
+    hat = rotate(hat, angle)
+    # Create shirt
+    shirt = StripeMotif(shirt_stripe_thickness*shirt_stripe_nber, hat.shape[1], shirt_stripe_nber)
+    # Fill the template, hat at the top, shirt at the bottom
+    out = np.zeros((hat.shape[0] + shirt.shape[0] + int(distance_hat_shirt*hat.shape[0]), hat.shape[1]))
+    out[:hat.shape[0], :hat.shape[1]] = hat
+    out[int(hat.shape[0]*(1 + distance_hat_shirt)):, :] = shirt
+    # Binarize to compensate interpolation of rotation
+    out[out >= 100] = 255
+    out[out < 100] = 0
+    return out
+
+
+
 def ExtractRed(image, minimum_red = 150, threshold_green = 100, threshold_blue = 100):
     """
     Isolate red color from an image
@@ -109,6 +148,18 @@ def ExtractRed(image, minimum_red = 150, threshold_green = 100, threshold_blue =
     # Set all red pixels to 255
     img[np.where(img[..., 0] > 0)] = 255
     return img
+
+
+def ExtractWhite(image, minimum_red=230, minimum_green=230, minimum_blue=230):
+    img = np.copy(image)
+    img[np.where(img[..., 1] <= minimum_green)] = 0
+    img[np.where(img[..., 2] <= minimum_blue)] = 0
+    img[np.where(img[..., 0] <= minimum_red)] = 0
+
+    # Set all white pixels to 255
+    img[np.where(img[..., 0] > 0)] = 255
+    return img
+
 
 def ExtractBlack(image, threshold_red = 80, threshold_green = 80, threshold_blue = 80):
     """
