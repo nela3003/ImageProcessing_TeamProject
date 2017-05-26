@@ -195,10 +195,10 @@ image = './data/images/01.jpg'
 image = plt.imread(image)
 reds = ExtractRed(image, 150, 100, 100)
 grayscale_reds = rgb2gray(reds)
+grayscale_reds -= np.mean(grayscale_reds)
 whites = ExtractWhite(image, 220, 220, 180)
 grayscale_whites = rgb2gray(whites)
-grayscale = rgb2gray(image)
-grayscale -= np.mean(grayscale)
+grayscale_whites -= np.mean(grayscale_whites)
 rw_image = np.empty((image.shape[0], image.shape[1], 2))
 rw_image[..., 0] = grayscale_reds
 rw_image[..., 1] = grayscale_whites
@@ -210,14 +210,39 @@ for filt in hatshirtRW_bank:
     template = np.flipud(template)
     template -= int(np.mean(template))
     score = scipy.signal.fftconvolve(rw_image, template, mode='same')
-    score = (score - score.mean())/score.std()
+    #score = (score - score.mean())/score.std()
     response.append(score)
 
 print('elpased time: {:02f}'.format(time.time() - t))
-temp = sum(response)
-peak_positions = feature.corner_peaks(temp, min_distance=200, indices=True, threshold_rel=0.2, num_peaks=1)
-peak_positions_img = feature.corner_peaks(temp, min_distance=200, indices=False, threshold_rel=0.2, num_peaks=1)
-for pos in peak_positions:
-    DrawRectangle(peak_positions_img, pos[0], pos[1], 15)
-PlotHeatmap(temp, peak_positions_img, title='Most probable positions of Waldo', bar=True)
-PlotHeatmap(image, temp)
+
+# Collapse RW response
+plt.figure()
+combined_response = []
+nb_plot = 1
+for i in range(len(response)):
+    #combined_response.append(np.sum(response[i], axis=2))
+    #peak_positions = feature.corner_peaks(combined_response[i], min_distance=200, indices=True, threshold_rel=0.2, num_peaks=5)
+    #peak_positions_img = feature.corner_peaks(combined_response[i], min_distance=200, indices=False, threshold_rel=0.2, num_peaks=5)
+    reds_peak_positions = feature.corner_peaks(response[i][..., 0], min_distance=200, indices=True, threshold_rel=0.2, num_peaks=1)
+    reds_peak_positions_img = feature.corner_peaks(response[i][..., 0], min_distance=200, indices=False, threshold_rel=0.2, num_peaks=1)
+    whites_peak_positions = feature.corner_peaks(response[i][..., 1], min_distance=200, indices=True, threshold_rel=0.2, num_peaks=1)
+    whites_peak_positions_img = feature.corner_peaks(response[i][..., 1], min_distance=200, indices=False, threshold_rel=0.2, num_peaks=1)
+    for pos in reds_peak_positions:
+        DrawRectangle(reds_peak_positions_img, pos[0], pos[1], 15)
+        plt.subplot(2, 4, nb_plot)
+        nb_plot += 1
+        plt.imshow(image)
+        plt.imshow(reds_peak_positions_img, alpha=0.7)
+        plt.title('Red Filter: '+str(i))
+    for pos in whites_peak_positions:
+        DrawRectangle(whites_peak_positions_img, pos[0], pos[1], 15)
+        plt.subplot(2, 4 ,nb_plot)
+        nb_plot += 1
+        plt.imshow(image)
+        plt.imshow(whites_peak_positions_img, alpha=0.7)
+        plt.title('White Filter: '+str(i))
+plt.show()
+
+# Detect close peaks
+#for i in range(len(response)):
+#    combined_response.append(np.sum(response[i], axis=2))
