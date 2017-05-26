@@ -180,7 +180,7 @@ def HatShirtBankRW(shirt_stripe_thickness=[3, 4, 5 , 6], shirt_stripe_nber=6, di
     return bank
 
 
-hatshirtRW_bank = HatShirtBankRW()
+hatshirtRW_bank = HatShirtBankRW(shirt_stripe_nber=4)
 fig = plt.figure()
 for i in range(4):
     plt.subplot(2,4,i+1)
@@ -191,7 +191,7 @@ for i in range(4):
 plt.show()
 
 t=time.time()
-image = './data/images/01.jpg'
+image = './data/images/03.jpg'
 image = plt.imread(image)
 reds = ExtractRed(image, 150, 100, 100)
 grayscale_reds = rgb2gray(reds)
@@ -223,24 +223,24 @@ for i in range(len(response)):
     #combined_response.append(np.sum(response[i], axis=2))
     #peak_positions = feature.corner_peaks(combined_response[i], min_distance=200, indices=True, threshold_rel=0.2, num_peaks=5)
     #peak_positions_img = feature.corner_peaks(combined_response[i], min_distance=200, indices=False, threshold_rel=0.2, num_peaks=5)
-    reds_peak_positions = feature.corner_peaks(response[i][..., 0], min_distance=200, indices=True, threshold_rel=0.2, num_peaks=1)
-    reds_peak_positions_img = feature.corner_peaks(response[i][..., 0], min_distance=200, indices=False, threshold_rel=0.2, num_peaks=1)
-    whites_peak_positions = feature.corner_peaks(response[i][..., 1], min_distance=200, indices=True, threshold_rel=0.2, num_peaks=1)
-    whites_peak_positions_img = feature.corner_peaks(response[i][..., 1], min_distance=200, indices=False, threshold_rel=0.2, num_peaks=1)
+    reds_peak_positions = feature.corner_peaks(response[i][..., 0], min_distance=200, indices=True, threshold_rel=0.2, num_peaks=5)
+    reds_peak_positions_img = feature.corner_peaks(response[i][..., 0], min_distance=200, indices=False, threshold_rel=0.2, num_peaks=5)
+    whites_peak_positions = feature.corner_peaks(response[i][..., 1], min_distance=200, indices=True, threshold_rel=0.2, num_peaks=5)
+    whites_peak_positions_img = feature.corner_peaks(response[i][..., 1], min_distance=200, indices=False, threshold_rel=0.2, num_peaks=5)
     for pos in reds_peak_positions:
         DrawRectangle(reds_peak_positions_img, pos[0], pos[1], 15)
-        plt.subplot(2, 4, nb_plot)
-        nb_plot += 1
-        plt.imshow(image)
-        plt.imshow(reds_peak_positions_img, alpha=0.7)
-        plt.title('Red Filter: '+str(i))
+    plt.subplot(2, 4, nb_plot)
+    nb_plot += 1
+    plt.imshow(image)
+    plt.imshow(reds_peak_positions_img, alpha=0.7)
+    plt.title('Red Filter: '+str(i))
     for pos in whites_peak_positions:
         DrawRectangle(whites_peak_positions_img, pos[0], pos[1], 15)
-        plt.subplot(2, 4 ,nb_plot)
-        nb_plot += 1
-        plt.imshow(image)
-        plt.imshow(whites_peak_positions_img, alpha=0.7)
-        plt.title('White Filter: '+str(i))
+    plt.subplot(2, 4 ,nb_plot)
+    nb_plot += 1
+    plt.imshow(image)
+    plt.imshow(whites_peak_positions_img, alpha=0.7)
+    plt.title('White Filter: '+str(i))
 plt.show()
 
 # Detect close peaks
