@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # remember: 14, 16, 19, 24 don't exist
-image = plt.imread('./data/images/27.jpg')
+image = plt.imread('./data/images/06.jpg')
 
 x, y = find_waldo(image)
 
