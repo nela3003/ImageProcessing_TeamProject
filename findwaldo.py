@@ -13,6 +13,7 @@ Python Version: 3.6.1
 import numpy as np
 import scipy.signal
 import skimage.feature
+import matplotlib.pyplot as plt
 
 
 def find_waldo(image):
@@ -72,6 +73,24 @@ def find_waldo(image):
         score = (score - score.mean()) / score.std()
         response.append(score)
 
+    #### START ADDING GLASSES PART
+    # px = [10, 12, 14, 16, 18, 20, 22, 24, 26]
+    # result_all = list()
+    # template = plt.imread('./template/glasses.png')
+    # image_grey = rgb2gray(image)
+    # template_grey = rgb2gray(template)
+    # for p in px:
+    #     filt = scipy.misc.imresize(template_grey, (int(template_grey.shape[0] / template_grey.shape[1] * p), p),
+    #                                 interp='bilinear', mode=None)
+    #     template = filt.copy()
+    #     template = np.fliplr(template)
+    #     template = np.flipud(template)
+    #     template -= int(np.mean(template))
+    #     score = scipy.signal.fftconvolve(image_grey, template, mode='same')
+    #     score = (score - score.mean()) / score.std()
+    #     result_all.append(score)
+    #### END ADDING GLASSES PART
+
     # Get the peaks coordinates of each filter response
     all_peaks = []
     for i in range(len(response)):
@@ -87,6 +106,19 @@ def find_waldo(image):
         all_peaks_intensities.append([response[i][peak[0], peak[1], 0] for peak in all_peaks[2*i]])
         all_peaks_intensities.append([response[i][peak[0], peak[1], 1] for peak in all_peaks[2*i + 1]])
 
+    #### START ADDING GLASSES PART
+    # all_peaks_2 = []
+    # all_peaks_intensities_2 = []
+    # for i in range(len(result_all)):
+    #     glasses_positions = skimage.feature.corner_peaks(result_all[i], min_distance=min_dist_peaks,
+    #                                                        indices=True, threshold_rel=0.2, num_peaks=nber_peaks)
+    #     all_peaks_2.append(glasses_positions)
+    # for i in range(len(result_all)):
+    #     all_peaks_intensities_2.append([result_all[i][peak[0], peak[1]] for peak in all_peaks_2[i]])
+    # all_peaks = all_peaks + all_peaks_2
+    # all_peaks_intensities = all_peaks_intensities + all_peaks_intensities_2
+    #### END ADDING GLASSES PART
+
     # Peak selection
     conc_all_peaks = np.concatenate(all_peaks)
     conc_all_peaks_intensities = np.concatenate(all_peaks_intensities)
@@ -95,7 +127,7 @@ def find_waldo(image):
     tmps = np.where(np.logical_and(dist_sq < min_dist_peaks, dist_sq != 0))
 
     if len(tmps[0]) != 0:
-        idx, count = np.unique(np.concatenate(tmps), return_counts=True)
+        idx = np.unique(np.concatenate(tmps))
         # In case of multiple peaks counted at least twice, go to intensity and pick the peak with highest intensity
         conc_all_peaks = conc_all_peaks[idx]
         conc_all_peaks_intensities = conc_all_peaks_intensities[idx]
@@ -157,7 +189,6 @@ def ExtractRed(image, minimum_red = 150, threshold_green = 100, threshold_blue =
     :param img: a 3D numpy array
     :return: a 3D numpy array with red zones
     """
-
     # Suppress all parts where green and blue are too strong and red too low (remoive non-red)
     img = np.copy(image)
     img[np.where(img[..., 1] >= threshold_green)] = 0
@@ -170,6 +201,11 @@ def ExtractRed(image, minimum_red = 150, threshold_green = 100, threshold_blue =
 
 
 def ExtractWhite(image, minimum_red=230, minimum_green=230, minimum_blue=230):
+    """
+    Isolate white color from an image
+    :param img: a 3D numpy array
+    :return: a 3D numpy array with white zones
+    """
     img = np.copy(image)
     img[np.where(img[..., 1] <= minimum_green)] = 0
     img[np.where(img[..., 2] <= minimum_blue)] = 0
@@ -186,4 +222,4 @@ def rgb2gray(rgb):
     :param rgb: a 3D numpy array
     :return: a 2D numpy array
     """
-    return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
+    return np.dot(rgb[..., :3], [0.299, 0.587, 0.114])
