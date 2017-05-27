@@ -197,23 +197,24 @@ def CombinePeaks(peakspos, intensities, min_dist_peaks=150):
     :return unique_peakspos_new: new coordinates of the peaks
     :return unique_intensities_new: new intentsities for the peaks
     """
-    unique_peakpos_old = np.concatenate(peakspos)
+    unique_peakpos_new = np.concatenate(peakspos)
     unique_intensities_old = np.concatenate(intensities)
-    unique_peakpos_new = []
+    unique_peakpos_old = []
     unique_intensities_new = []
-    while np.array_equal(unique_peakpos_old, unique_peakpos_new):
+    while not np.array_equal(unique_peakpos_old, unique_peakpos_new):
+        unique_peakpos_old = unique_peakpos_new.copy()
         dist = scipy.spatial.distance.pdist(unique_peakpos_old)
         dist_sq = np.triu(scipy.spatial.distance.squareform(dist))
         tmps = np.where(np.logical_and(dist_sq < min_dist_peaks, dist_sq != 0))
         candidates = [(tmps[0][i], tmps[1][i]) for i in range(len(tmps[0]))]
-        unique_peakpos_new = [np.mean([unique_peakpos_old[x], unique_peakpos_old[y]], axis=0) for x, y in candidates]
+        unique_peakpos_new = [np.mean([unique_peakpos_old[x[0]], unique_peakpos_old[x[1]]], axis=0) for x in candidates]
         unique_intensities_new = [np.max([unique_intensities_old[x], unique_intensities_old[y]]) for x, y in candidates]
         for i in range(len(unique_peakpos_old)):
             if i not in np.unique(np.concatenate(candidates)):
                 unique_peakpos_new.append(unique_peakpos_old[i])
                 unique_intensities_new.append(unique_intensities_old[i])
         unique_peakpos_new = [x.astype(int) for x in unique_peakpos_new]
-    return unique_peakpos_new, unique_intensities_new
+    return unique_peakpos_old, unique_intensities_new
 
 ################## K-Means ##################
 # To Replace Extract Red and Extract White?

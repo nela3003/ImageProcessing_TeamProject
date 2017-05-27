@@ -9,7 +9,7 @@ Python Version: 3.6.1
 """
 
 from preprocessing_utils import *
-from filter_bank import *
+#from filter_bank import *
 
 def find_waldo(image_files, filter_bank, nber_peaks=5, min_dist_peaks=150, extract_red=(150, 100, 100),
                extract_white=(220, 220, 180)):
@@ -62,8 +62,8 @@ def find_waldo(image_files, filter_bank, nber_peaks=5, min_dist_peaks=150, extra
             score = (score - score.mean()) / score.std()
             response.append(score)
 
-        # Get the peaks of each filter response
-        all_peaks=[]
+        # Get the peaks coordinates of each filter response
+        all_peaks = []
         for i in range(len(response)):
             reds_peak_positions = feature.corner_peaks(response[i][..., 0], min_distance=min_dist_peaks, indices=True,
                                                        threshold_rel=0.2, num_peaks=nber_peaks)
@@ -72,9 +72,32 @@ def find_waldo(image_files, filter_bank, nber_peaks=5, min_dist_peaks=150, extra
             all_peaks.append(reds_peak_positions)
             all_peaks.append(whites_peak_positions)
 
+        all_peaks_intensities = []
+        for i in range(len(response)):
+            all_peaks_intensities.append([response[i][peak[0], peak[1], 0] for peak in all_peaks[2*i]])
+            all_peaks_intensities.append([response[i][peak[0], peak[1], 1] for peak in all_peaks[2*i + 1]])
+
+        """
         # Identify unique peaks
-
+        unique_peaks_pos, unique_peaks_int = CombinePeaks(all_peaks, all_peaks_intensities, min_dist_peaks)
+        """
         # Peak selection
+        conc_all_peaks = np.concatenate(all_peaks)
+        conc_all_peaks_intensities = np.concatenate(all_peaks_intensities)
+        dist = scipy.spatial.distance.pdist(conc_all_peaks)
+        dist_sq = np.triu(scipy.spatial.distance.squareform(dist))
+        tmps = np.where(np.logical_and(dist_sq < min_dist_peaks, dist_sq != 0))
+        #candidates = [(tmps[0][i], tmps[1][i]) for i in range(len(tmps[0]))]
+
+        idx, count = np.unique(np.concatenate(tmps), return_counts=True)
+
+        # In case of ties in counting, go to intensity and pick the peak with highest
+        idx_multi_occ_peaks = idx[np.where(count == np.max(count))]
+        conc_all_peaks = conc_all_peaks[idx_multi_occ_peaks]
+        conc_all_peaks_intensities = conc_all_peaks_intensities[idx_multi_occ_peaks]
+
+        return conc_all_peaks[np.argmax(conc_all_peaks_intensities)], idx, count, conc_all_peaks, conc_all_peaks_intensities, idx_multi_occ_peaks
 
 
-        return (x,y)
+#peaks, intens, temp, index, counting = find_waldo(['./data/images/06.jpg'], hatshirtRW_bank, nber_peaks=1)
+temp, index, counting, peaks, intens, pos = find_waldo(['./data/images/06.jpg'], hatshirtRW_bank, nber_peaks=1)
