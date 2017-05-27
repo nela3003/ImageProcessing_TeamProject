@@ -192,25 +192,28 @@ def CombinePeaks(peakspos, intensities, min_dist_peaks=150):
     """
     Combine close peaks (within euclidean distance < min_dist_peaks) as coordinate average and maximum intensity.
     :param peakspos: list of lists of peak coordinates [[(x1,y1),(x2,y2)],[(x3,y3),(x4,y4),(x5,y5)]]
-    :param intensities: 
+    :param intensities: list of lists of peak intesities [[z1,z2],[z3,z4,z5]]
     :param min_dist_peaks:
-    :return unique_peakspos: new coordinates of the peaks
-    :return unique_intensities: new intentsities for the peaks
+    :return unique_peakspos_new: new coordinates of the peaks
+    :return unique_intensities_new: new intentsities for the peaks
     """
-    peakspos_flat = np.concatenate(peakspos)
-    intensities_flat = np.concatenate(intensities)
-    dist = scipy.spatial.distance.pdist(peakspos_flat)
-    dist_sq = np.triu(scipy.spatial.distance.squareform(dist))
-    tmps = np.where(np.logical_and(dist_sq < min_dist_peaks, dist_sq != 0))
-    candidates = [(tmps[0][i], tmps[1][i]) for i in range(len(tmps[0]))]
-    unique_peakpos = [np.mean([peakspos_flat[x], peakspos_flat[y]], axis = 0) for x,y in candidates]
-    unique_intensities = [np.max([intensities_flat[x], intensities_flat[y]]) for x,y in candidates]
-    for i in range(len(peakspos_flat)):
-        if i not in np.unique(np.concatenate(candidates)):
-            unique_peakpos.append(peakspos_flat[i])
-            unique_intensities.append(intensities_flat[i])
-    unique_peakpos = [x.astype(int) for x in unique_peakpos]
-    return unique_peakpos, unique_intensities
+    unique_peakpos_old = np.concatenate(peakspos)
+    unique_intensities_old = np.concatenate(intensities)
+    unique_peakpos_new = []
+    unique_intensities_new = []
+    while unique_peakpos_old != unique_peakpos_new:
+        dist = scipy.spatial.distance.pdist(unique_peakpos_old)
+        dist_sq = np.triu(scipy.spatial.distance.squareform(dist))
+        tmps = np.where(np.logical_and(dist_sq < min_dist_peaks, dist_sq != 0))
+        candidates = [(tmps[0][i], tmps[1][i]) for i in range(len(tmps[0]))]
+        unique_peakpos_new = [np.mean([unique_peakpos_old[x], unique_peakpos_old[y]], axis=0) for x, y in candidates]
+        unique_intensities_new = [np.max([unique_intensities_old[x], unique_intensities_old[y]]) for x, y in candidates]
+        for i in range(len(unique_peakpos_old)):
+            if i not in np.unique(np.concatenate(candidates)):
+                unique_peakpos_new.append(unique_peakpos_old[i])
+                unique_intensities_new.append(unique_intensities_old[i])
+        unique_peakpos_new = [x.astype(int) for x in unique_peakpos_new]
+    return unique_peakpos_new, unique_intensities_new
 
 ################## K-Means ##################
 # To Replace Extract Red and Extract White?
