@@ -75,10 +75,10 @@ def find_waldo(image):
     # Get the peaks coordinates of each filter response
     all_peaks = []
     for i in range(len(response)):
-        reds_peak_positions = skimage.feature.corner_peaks(response[i][..., 0], min_distance=min_dist_peaks, indices=True,
-                                                   threshold_rel=0.2, num_peaks=nber_peaks)
-        whites_peak_positions = skimage.feature.corner_peaks(response[i][..., 1], min_distance=min_dist_peaks, indices=True,
-                                                     threshold_rel=0.2, num_peaks=nber_peaks)
+        reds_peak_positions = skimage.feature.corner_peaks(response[i][..., 0], min_distance=min_dist_peaks,
+                                                           indices=True, threshold_rel=0.2, num_peaks=nber_peaks)
+        whites_peak_positions = skimage.feature.corner_peaks(response[i][..., 1], min_distance=min_dist_peaks,
+                                                             indices=True, threshold_rel=0.2, num_peaks=nber_peaks)
         all_peaks.append(reds_peak_positions)
         all_peaks.append(whites_peak_positions)
 
@@ -94,7 +94,7 @@ def find_waldo(image):
     dist_sq = np.triu(scipy.spatial.distance.squareform(dist))
     tmps = np.where(np.logical_and(dist_sq < min_dist_peaks, dist_sq != 0))
 
-    if len(tmps) != 0:
+    if len(tmps[0]) != 0:
         idx, count = np.unique(np.concatenate(tmps), return_counts=True)
         # In case of multiple peaks counted at least twice, go to intensity and pick the peak with highest intensity
         conc_all_peaks = conc_all_peaks[idx]
