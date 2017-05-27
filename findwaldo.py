@@ -8,69 +8,73 @@ Team Project
 Python Version: 3.6.1
 """
 
-"""
-Maybe try a two pass approach: - first use convolution to detect possible positions
-                               - wherever there is signal, use circle fitting in the cropped neighbourhood to detect the glasses
-"""
-
 from preprocessing_utils import *
+from filter_bank import *
 
-# ===============================================================
-# =             Method 1 : With convolution                     =
-# ===============================================================
-
-
-def find_waldo_fftconvolve(img, template, min_red, max_green, max_blue, min_dist_peak, thresh_peak,
-                           max_nber_peak, size_box, extract_red=True, plot=True):
+def find_waldo(image_files, filter_bank, nber_peaks=5, min_dist_peaks=150, extract_red=(150, 100, 100),
+               extract_white=(220, 220, 180)):
     """
-    Returns a list of possible positions of waldo in an image file. Search is done by fftconvolution with a template.
-    :param img: path to an RGB image file
-    :param template: a 2D (grayscale) numpy array used for searching waldo. /!\ gets flipped to obtain same effect as a 
-    correlation.
-    :param extract_red: boolean, should the convolution be performed on red pixels only?
-    :param min_red: numeric, minimum value in R channel to class a pixel as red
-    :param max_green: numeric, maximum value in G channel to class a pixel as red
-    :param max_blue: numeric, maximum value in B channel to class a pixel as red
-    :param min_dist_peak: int, minimal distance between peaks of detection in pixel
-    :param thresh_peak: float, relative intensity of a peak compare to max intensity
-    :param max_nber_peak: int, max number of peaks
-    :param size_box: int, size of the box for plotting Waldo's position
-    :param plot: boolean, print the plots?
-    :return: a 2D numpy array with Waldo's most probable positions
+    Look for Waldo's shirt and beanie in red and white pixels. Return a single pos for most probable Waldo's position.
+    :param image_files: list of characters
+    :param filter_bank: list of (x, y, 2) np.arrays as returned by StripeMotifRW
+    :param nber_peaks: integer, how many peaks from each filter should be considered? 
+    :param min_dist_peaks: float, minimum distance between 2 peaks intra and inter filters. Intra: if 2 peaks within the
+    range are detected, no peak is returned. Inter: when looking for identical peaks across filters, 2 peaks within the 
+    range are combined into a single one.
+    :param extract_red: a tuple of 3 integers, represents minimum value of red and maximum value of blue and green resp.
+    to class a pixel as red in preprocessing color extraction
+    :param extract_white: a tuple of 3 integers, represents minimum value of red and maximum value of blue and green resp.
+    to class a pixel as red in preprocessing color extraction 
+    :return: a tuple of 2 integers representing Waldo's position
     """
-    image = plt.imread(img)
-    # Isolate red pixels
-    if extract_red:
-        reds = ExtractRed(image, min_red, max_green, max_blue)
-        grayscale = rgb2gray(reds)
-        if plot:
-            PlotHeatmap(image, reds, title='Binarized Red Pixels map', bar=False)
-    else:
-        grayscale = rgb2gray(image)
 
-    grayscale -= np.mean(grayscale)
-    # If use a non-symmetric template, flip it if for convolution (so that it does the same as correlation)
-    template = np.fliplr(template)
-    template = np.flipud(template)
-    template -= np.mean(template)
+    # Put call parameters in convenient variables
+    rr, rg, rb = extract_red
+    wr, wg, wb = extract_white
+    for file in image_files:
+        # Preprocessing steps
+        t = time.time()
+        image = plt.imread(file)
 
-    t1 = time.time()
-    # Look for template, heatmap of template in different regions
-    score = scipy.signal.fftconvolve(grayscale, template, mode='same')
+        reds = ExtractRed(image, rr, rg, rb)
+        grayscale_reds = rgb2gray(reds)
+        grayscale_reds -= np.mean(grayscale_reds)
 
-    # Isolate peaks
-    peak_positions = feature.corner_peaks(score, min_distance=min_dist_peak, indices=True, threshold_rel=thresh_peak,
-                                          num_peaks=max_nber_peak)
-    t2 = time.time()
-    print('Elapsed time: {:03f}'.format(t2 - t1))
-    if plot:
-        PlotHeatmap(image, score, title='Convolution score')
+        whites = ExtractWhite(image, wr, wb, wg)
+        grayscale_whites = rgb2gray(whites)
+        grayscale_whites -= np.mean(grayscale_whites)
 
-    # Draw a rectangle at the position of the peaks -> this is slow and redundant, could be improved
-    if plot:
-        peak_positions_img = feature.corner_peaks(score, min_distance=min_dist_peak, indices=False,
-                                              threshold_rel=thresh_peak, num_peaks=max_nber_peak)
-        for pos in peak_positions:
-            DrawRectangle(peak_positions_img, pos[0], pos[1], size_box)
-        PlotHeatmap(image, peak_positions_img, title='Most probable positions of Waldo', bar=False)
-    return peak_positions
+        # Create a (x, y, 2) RED-WHITE image
+        rw_image = np.empty((image.shape[0], image.shape[1], 2))
+        rw_image[..., 0] = grayscale_reds
+        rw_image[..., 1] = grayscale_whites
+
+        # Apply filter banks, each response is composed of a red and white channel, so response is number_filter*(x, y, 2) list
+        response = []
+        for filt in filter_bank:
+            # Flip the filter to make convolution behaves as correlation, remove mean to center the filter
+            template = filt.copy()
+            template = np.fliplr(template)
+            template = np.flipud(template)
+            template -= int(np.mean(template))
+            # Perform convolution and normalize the score output
+            score = scipy.signal.fftconvolve(rw_image, template, mode='same')
+            score = (score - score.mean()) / score.std()
+            response.append(score)
+
+        # Get the peaks of each filter response
+        all_peaks=[]
+        for i in range(len(response)):
+            reds_peak_positions = feature.corner_peaks(response[i][..., 0], min_distance=min_dist_peaks, indices=True,
+                                                       threshold_rel=0.2, num_peaks=nber_peaks)
+            whites_peak_positions = feature.corner_peaks(response[i][..., 1], min_distance=min_dist_peaks, indices=True,
+                                                         threshold_rel=0.2, num_peaks=nber_peaks)
+            all_peaks.append(reds_peak_positions)
+            all_peaks.append(whites_peak_positions)
+
+        # Identify unique peaks
+
+        # Peak selection
+
+
+        return (x,y)
