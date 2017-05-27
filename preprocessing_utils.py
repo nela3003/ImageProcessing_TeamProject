@@ -188,23 +188,29 @@ def FindMaximaListArray(response_array):
         i += 1
     return loc_sf, arr_sf
 
-def CombinePeaks(peakspos, min_dist_peaks=150):
+def CombinePeaks(peakspos, intensities, min_dist_peaks=150):
     """
-    
+    Combine close peaks (within euclidean distance < min_dist_peaks) as coordinate average and maximum intensity.
     :param peakspos: list of lists of peak coordinates [[(x1,y1),(x2,y2)],[(x3,y3),(x4,y4),(x5,y5)]]
-    :return: 
+    :param intensities: 
+    :param min_dist_peaks:
+    :return unique_peakspos: new coordinates of the peaks
+    :return unique_intensities: new intentsities for the peaks
     """
     peakspos_flat = np.concatenate(peakspos)
+    intensities_flat = np.concatenate(intensities)
     dist = scipy.spatial.distance.pdist(peakspos_flat)
     dist_sq = np.triu(scipy.spatial.distance.squareform(dist))
     tmps = np.where(np.logical_and(dist_sq < min_dist_peaks, dist_sq != 0))
     candidates = [(tmps[0][i], tmps[1][i]) for i in range(len(tmps[0]))]
     unique_peakpos = [np.mean([peakspos_flat[x], peakspos_flat[y]], axis = 0) for x,y in candidates]
+    unique_intensities = [np.max([intensities_flat[x], intensities_flat[y]]) for x,y in candidates]
     for i in range(len(peakspos_flat)):
         if i not in np.unique(np.concatenate(candidates)):
             unique_peakpos.append(peakspos_flat[i])
+            unique_intensities.append(intensities_flat[i])
     unique_peakpos = [x.astype(int) for x in unique_peakpos]
-    return unique_peakpos
+    return unique_peakpos, unique_intensities
 
 ################## K-Means ##################
 # To Replace Extract Red and Extract White?
