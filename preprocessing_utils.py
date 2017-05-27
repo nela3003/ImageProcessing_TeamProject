@@ -201,7 +201,7 @@ def CombinePeaks(peakspos, intensities, min_dist_peaks=150):
     unique_intensities_old = np.concatenate(intensities)
     unique_peakpos_new = []
     unique_intensities_new = []
-    while unique_peakpos_old != unique_peakpos_new:
+    while np.array_equal(unique_peakpos_old, unique_peakpos_new):
         dist = scipy.spatial.distance.pdist(unique_peakpos_old)
         dist_sq = np.triu(scipy.spatial.distance.squareform(dist))
         tmps = np.where(np.logical_and(dist_sq < min_dist_peaks, dist_sq != 0))
