@@ -2,7 +2,8 @@ from findwaldo import find_waldo
 import matplotlib.pyplot as plt
 import numpy as np
 
-image = plt.imread('./data/images/06.jpg')
+# remember: 14, 16, 19, 24 don't exist
+image = plt.imread('./data/images/22.jpg')
 
 x, y = find_waldo(image)
 
