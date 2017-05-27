@@ -26,6 +26,7 @@ import scipy.signal
 import time
 from skimage import filters, feature, morphology
 from math import pi
+import scipy.spatial.distance
 
 
 def rgb2gray(rgb):
@@ -52,27 +53,6 @@ def PlotHeatmap(image, score_image, alpha = 0.7, title = "", bar = True):
     if bar:
         plt.colorbar()
     plt.show()
-
-
-def RemoveBackground(img, method, window_size = 25, k = 0.8):
-    """
-    Create a binary image separating foreground from background
-    :param img: a numpy array
-    :param method: one of ['otsu', 'niblack', 'sauvola']
-    :param window_size: size of neighborhood used to define threshold, used in ['niblack', 'sauvola']
-    :param k: used to tune local threshold, used in ['niblack', 'sauvola']
-    :return: numpy array, representing a binary image
-    """
-    image = np.copy(img)
-    if method == 'otsu':
-        threshold = filters.threshold_otsu(img)
-    elif method == 'niblack':
-        threshold = filters.threshold_niblack(img, window_size, k)
-    elif method == 'sauvola':
-        threshold = filters.threshold_sauvola(img)
-    image[image <= threshold] = 255
-    image[image >= threshold] = 0
-    return image
 
 
 def StripeMotif(height, width, nber_stripe=4):
@@ -129,7 +109,6 @@ def HatShirtMotif(shirt_stripe_thickness, shirt_stripe_nber, distance_hat_shirt=
     out[out >= 100] = 255
     out[out < 100] = 0
     return out
-
 
 
 def ExtractRed(image, minimum_red = 150, threshold_green = 100, threshold_blue = 100):
@@ -209,6 +188,23 @@ def FindMaximaListArray(response_array):
         i += 1
     return loc_sf, arr_sf
 
+def CombinePeaks(peakspos, min_dist_peaks=150):
+    """
+    
+    :param peakspos: list of lists of peak coordinates [[(x1,y1),(x2,y2)],[(x3,y3),(x4,y4),(x5,y5)]]
+    :return: 
+    """
+    peakspos_flat = np.concatenate(peakspos)
+    dist = scipy.spatial.distance.pdist(peakspos_flat)
+    dist_sq = np.triu(scipy.spatial.distance.squareform(dist))
+    tmps = np.where(np.logical_and(dist_sq < min_dist_peaks, dist_sq != 0))
+    candidates = [(tmps[0][i], tmps[1][i]) for i in range(len(tmps[0]))]
+    unique_peakpos = [np.mean([peakspos_flat[x], peakspos_flat[y]], axis = 0) for x,y in candidates]
+    for i in range(len(peakspos_flat)):
+        if i not in np.unique(np.concatenate(candidates)):
+            unique_peakpos.append(peakspos_flat[i])
+    unique_peakpos = [x.astype(int) for x in unique_peakpos]
+    return unique_peakpos
 
 ################## K-Means ##################
 # To Replace Extract Red and Extract White?
@@ -259,3 +255,4 @@ plt.title('Quantized image (64 colors, Random)')
 plt.imshow(recreate_image(codebook_random, labels_random, w, h))
 plt.show()
 """
+

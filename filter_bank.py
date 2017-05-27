@@ -173,7 +173,7 @@ def HatShirtMotifRW(shirt_stripe_thickness, shirt_stripe_nber, distance_hat_shir
     return out
 
 
-def HatShirtBankRW(shirt_stripe_thickness=[3, 4, 5 , 6], shirt_stripe_nber=6, distance_hat_shirt=1.5, angle=45):
+def HatShirtBankRW(shirt_stripe_thickness=[3, 4, 5, 6], shirt_stripe_nber=6, distance_hat_shirt=1.5, angle=45):
     bank = []
     for thick in shirt_stripe_thickness:
         bank.append(HatShirtMotifRW(thick, shirt_stripe_nber, distance_hat_shirt, angle))
