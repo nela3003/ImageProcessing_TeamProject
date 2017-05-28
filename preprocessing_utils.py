@@ -188,6 +188,24 @@ def FindMaximaListArray(response_array):
         i += 1
     return loc_sf, arr_sf
 
+
+def CombinePeaks2(width, height, conc_all_peaks, conc_all_peaks_intensities, min_dist_peaks=100):
+    peak_map = np.zeros((height, width))
+    for i in range(len(conc_all_peaks)):
+        peak_map[conc_all_peaks[i][0],conc_all_peaks[i][1]] = conc_all_peaks_intensities[i]
+    conc_unique_peaks = skimage.feature.peak_local_max(peak_map, min_distance=50)
+    # For each unique peak, return mean signal of this peak
+    conc_unique_intensities = []
+    for peak in conc_unique_peaks:
+        # Area around the peak
+        area = peak_map[peak[0]-int(min_dist_peaks/2):peak[0]+int(min_dist_peaks/2),
+               peak[1]-int(min_dist_peaks/2):peak[1]+int(min_dist_peaks/2)]
+        conc_unique_intensities.append(np.mean(area[np.nonzero(area)]))
+    # conc_unique_intensities = [peak_map[pos[0], pos[1]] for pos in conc_unique_peaks]
+    return conc_unique_peaks, conc_unique_intensities
+
+
+
 def CombinePeaks(peakspos, intensities, min_dist_peaks=150):
     """
     Combine close peaks (within euclidean distance < min_dist_peaks) as coordinate average and maximum intensity.
