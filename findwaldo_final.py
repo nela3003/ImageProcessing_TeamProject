@@ -96,7 +96,7 @@ def find_waldo(image):
         all_peaks_intensities.append([response[i][peak[0], peak[1], 0] for peak in all_peaks[2*i]])
         all_peaks_intensities.append([response[i][peak[0], peak[1], 1] for peak in all_peaks[2*i + 1]])
 
-    # Identify unique peaks
+    # Identify unique peaks, their corresponding intensities and the number of filters which voted for them
     conc_all_peaks = np.concatenate(all_peaks)
     conc_all_intensities = np.concatenate(all_peaks_intensities)
     conc_unique_peaks, conc_unique_intensities, conc_unique_votes = CombinePeaks(image.shape[0], image.shape[1], conc_all_peaks,

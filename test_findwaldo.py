@@ -32,3 +32,26 @@ ax1.add_patch(rect)
 
 # with nber_peaks = 1 and min_dist_peaks = 100 and glasses
 # found: 04, 06, 10, 12, 21, 27
+
+
+
+########################################################################
+
+
+import os
+import time
+import matplotlib.pyplot as plt
+
+files = ['./data/images/' + i  for i in os.listdir('./data/images/')]
+t0 = time.time()
+result = []
+for file in files:
+    print(file)
+    img = plt.imread(file)
+    result.append(find_waldo(img))
+t1 = time.time()
+print('Elapsed time: {:02f}'.format(t1 - t0))
+
+with open('temp.txt', 'w') as f:
+    for res in result:
+        f.write(str(res) + '\n')
