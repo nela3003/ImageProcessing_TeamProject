@@ -113,6 +113,14 @@ def find_waldo(image):
 
 
 def HatShirtBankRW(shirt_stripe_thickness=[3, 4, 5, 6], shirt_stripe_nber=6, distance_hat_shirt=1.5, angle=45):
+    """
+    Generate a bank of filters which detect hat and shirt of Waldo. Each filter is a RED-WHITE image.
+    :param shirt_stripe_thickness: list of integer, thickness of stripes in px
+    :param shirt_stripe_nber: integer, how many stripes on the shirt?
+    :param distance_hat_shirt: float, distance between the hat and the shirt, given in height of hat unit
+    :param angle: integer, angle between the hat axis and horizontal axis
+    :return: A list of (x, y, 2) np arrays
+    """
     bank = []
     for thick in shirt_stripe_thickness:
         bank.append(HatShirtMotifRW(thick, shirt_stripe_nber, distance_hat_shirt, angle))
@@ -120,6 +128,14 @@ def HatShirtBankRW(shirt_stripe_thickness=[3, 4, 5, 6], shirt_stripe_nber=6, dis
 
 
 def HatShirtMotifRW(shirt_stripe_thickness, shirt_stripe_nber, distance_hat_shirt=1.5, angle=45):
+    """
+    Generate one filter which detect hat and shirt of Waldo. The filter is a RED-WHITE image.
+    :param shirt_stripe_thickness: an integer, thickness of stripes in px
+    :param shirt_stripe_nber: integer, how many stripes on the shirt?
+    :param distance_hat_shirt: float, distance between the hat and the shirt, given in height of hat unit
+    :param angle: integer, angle between the hat axis and horizontal axis
+    :return: A (x, y, 2) np arrays
+    """
     from scipy.ndimage.interpolation import rotate
     # Create a square hat with 2 red stripes
     hat_stripe_thickness = int(0.7373 * shirt_stripe_thickness - 0.4249)
@@ -140,6 +156,13 @@ def HatShirtMotifRW(shirt_stripe_thickness, shirt_stripe_nber, distance_hat_shir
 
 
 def StripeMotifRW(height, width, nber_stripe=4):
+    """
+    Generate an horizontal stripe motif with alternated red and white channels.
+    :param height: integer, height of the image. Must be a multiple of nber_stripes
+    :param width: integer, width of the image.
+    :param nber_stripe: integer, how many stripes?
+    :return: An (x, y, 2) numpy array, first slice represents red channel, second white channel.
+    """
     if height % nber_stripe != 0:
         raise ValueError('height must be a multiple of nber_stripe')
     stripes_red = np.zeros((height, width))
@@ -160,9 +183,12 @@ def StripeMotifRW(height, width, nber_stripe=4):
 
 def ExtractRed(image, minimum_red = 150, threshold_green = 100, threshold_blue = 100):
     """
-    Isolate red color from an image
-    :param img: a 3D numpy array
-    :return: a 3D numpy array with red zones
+    Extract pixels that appear visually red and returns a binary image
+    :param image: (x, y, 3) np array which represents an RGB image
+    :param minimum_red: integer, minimal value in red channel
+    :param threshold_green: integer, maximum value in green channel
+    :param threshold_blue: integer, maximum value in blue channel
+    :return: A binarized (x, y, 3) np array with non-red pixels set to zero on every channel and 255 for red pixels.
     """
     # Suppress all parts where green and blue are too strong and red too low (remoive non-red)
     img = np.copy(image)
@@ -177,9 +203,12 @@ def ExtractRed(image, minimum_red = 150, threshold_green = 100, threshold_blue =
 
 def ExtractWhite(image, minimum_red=230, minimum_green=230, minimum_blue=230):
     """
-    Isolate white color from an image
-    :param img: a 3D numpy array
-    :return: a 3D numpy array with white zones
+    Extract pixels that appear visually white and returns a binary image
+    :param image: (x, y, 3) np array which represents an RGB image
+    :param minimum_red: integer, minimal value in red channel
+    :param minimum_green: integer, minimal value in green channel
+    :param minimum_blue: integer, minimal value in blue channel
+    :return: A binarized (x, y, 3) np array with non-white pixels set to zero on every channel and 255 for white pixels.
     """
     img = np.copy(image)
     img[np.where(img[..., 1] <= minimum_green)] = 0
@@ -201,6 +230,18 @@ def rgb2gray(rgb):
 
 
 def CombinePeaks(height, width, conc_all_peaks, conc_all_peaks_intensities, min_dist_peaks=100):
+    """
+    Combine the peaks of intensity resulting from different filter convolution. Spatially close peaks are gathered
+    together in order to form a single peak. Also returns the intensities corresponding to these new peaks (take the
+    maximum intensity from the peaks that have been used to build the new peak); and the number of filters that voted
+    for this peak.
+    :param height: integer, height of the image on which convolution was performed.
+    :param width: integer, width of the image on which convolution was performed.
+    :param conc_all_peaks: A list of 2D, coordinates
+    :param conc_all_peaks_intensities: A list of floats
+    :param min_dist_peaks: integer, define the spatial distance under which two peaks are gathered together.
+    :return: The "filtered" list of peaks, their corresponding intensities and the number of filters which voted for it.
+    """
     peak_map = np.zeros((height, width))
     for i in range(len(conc_all_peaks)):
         peak_map[conc_all_peaks[i][0],conc_all_peaks[i][1]] = conc_all_peaks_intensities[i]
