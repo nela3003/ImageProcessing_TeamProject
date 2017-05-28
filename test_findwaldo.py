@@ -1,4 +1,4 @@
-from findwaldo import find_waldo
+from findwaldo_final import find_waldo
 import matplotlib.pyplot as plt
 import numpy as np
 
